@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Android-Music-Player-Example</string>
+    <string name="cover_description">Track cover</string>
+    <string name="start_time">00:00</string>
+    <string name="to_previous_track_description">To previous track</string>
+    <string name="play_or_pause_description">Play or pause</string>
+    <string name="to_next_track_description">To next track</string>
 </resources>
