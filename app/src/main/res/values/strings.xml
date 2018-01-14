@@ -5,4 +5,8 @@
     <string name="to_previous_track_description">To previous track</string>
     <string name="play_or_pause_description">Play or pause</string>
     <string name="to_next_track_description">To next track</string>
+    <string name="permission_error_dialog_title">Permission error</string>
+    <string name="permission_error_dialog_message">Please go to settings and set up it!</string>
+    <string name="permission_error_dialog_negative_button_text">Exit</string>
+    <string name="permission_error_dialog_positive_button_text">Go</string>
 </resources>

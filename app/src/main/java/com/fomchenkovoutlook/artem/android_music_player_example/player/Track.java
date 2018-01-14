@@ -1,6 +1,6 @@
 package com.fomchenkovoutlook.artem.android_music_player_example.player;
 
-class Track {
+public class Track {
 
     private String name;
 

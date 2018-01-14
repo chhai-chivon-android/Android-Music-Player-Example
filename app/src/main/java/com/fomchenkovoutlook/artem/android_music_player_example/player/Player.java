@@ -1,20 +1,37 @@
 package com.fomchenkovoutlook.artem.android_music_player_example.player;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Environment;
 
+import com.fomchenkovoutlook.artem.android_music_player_example.utils.PlayerUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
 
+    private final String MUSIC_FOLDER_PATH = Environment
+            .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+            .getPath() + "/";
+
     private final int DEFAULT_VALUE = 0;
 
     private MediaPlayer player;
 
+    private PlayerUtils playerUtils;
+
     private int currentTime;
 
-    private boolean isPaused;
+    private boolean isPaused = true;
+    private boolean endPlaying = false;
 
     public static class PlayerHolder {
         static final Player PLAYER_INSTANCE = new Player();
@@ -24,86 +41,130 @@ public class Player {
         return player == null;
     }
 
-    private void getException() {
-        throw new NullPointerException("Please, init a player!");
-    }
-
     public static Player getInstance() {
         return PlayerHolder.PLAYER_INSTANCE;
     }
 
     public void init() {
         player = new MediaPlayer();
+        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                endPlaying = true;
+            }
+        });
+
+        playerUtils = new PlayerUtils();
     }
 
-    public void play(Track track) {
-        if (getPlayerState() && !player.isPlaying()) {
-            if (isPaused) {
-                player.seekTo(currentTime);
-            }
+    public void play(Track track)
+            throws IOException {
+        if (!getPlayerState() && !player.isPlaying()) {
+            FileInputStream fileInputStream =
+                    new FileInputStream(new File(MUSIC_FOLDER_PATH + track.getName()));
+
+            player.reset();
+            player.setDataSource(fileInputStream.getFD());
+            player.prepare();
+            player.start();
+
+            isPaused = false;
+            endPlaying = false;
+        }
+    }
+
+    public void resume() {
+        if (!getPlayerState() && !player.isPlaying() && isPaused) {
+            player.seekTo(currentTime);
+
+            isPaused = false;
 
             player.start();
-        } else {
-            getException();
         }
     }
 
     public void pause() {
-        if (getPlayerState() && player.isPlaying()) {
+        if (!getPlayerState() && player.isPlaying() && !isPaused) {
             currentTime = player.getCurrentPosition();
 
             isPaused = true;
 
+            player.pause();
+        }
+    }
+
+    public void stop() {
+        if (!getPlayerState() && player.isPlaying()) {
             player.stop();
-        } else {
-            getException();
         }
     }
 
     public void toTime(int time) {
-        if (getPlayerState()) {
+        if (!getPlayerState()) {
             player.seekTo(time);
         }
     }
 
     public int getTrackTimePosition() {
-        if (getPlayerState()) {
+        if (!getPlayerState()) {
             return player.getCurrentPosition();
-        } else {
-            getException();
         }
 
         return DEFAULT_VALUE;
     }
 
     public int getTrackEndTime() {
-        if (getPlayerState()) {
-            player.getDuration();
-        } else {
-            getException();
+        if (!getPlayerState()) {
+            return player.getDuration();
         }
 
         return DEFAULT_VALUE;
     }
 
     public List<Track> checkDirectory() {
-        if (getPlayerState()) {
+        List<Track> tracks = new ArrayList<>();
 
-        } else {
-            getException();
+        if (!getPlayerState()) {
+            for (File track: new File(MUSIC_FOLDER_PATH).listFiles()) {
+                if (playerUtils.isMusicFile(track)) {
+                    tracks.add(new Track(track.getName()));
+                }
+            }
         }
 
-        return new ArrayList<>();
+        return tracks;
     }
 
-    public Bitmap getCover(Track track) {
-        if (getPlayerState()) {
+    public Bitmap getCover(Track track, Context context) {
+        Bitmap cover;
 
-        } else {
-            getException();
+        if (!getPlayerState()) {
+            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+
+            byte[] rawCover;
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+
+            mediaMetadataRetriever.setDataSource(context,
+                    Uri.fromFile(new File(MUSIC_FOLDER_PATH + track.getName())));
+
+            rawCover = mediaMetadataRetriever.getEmbeddedPicture();
+
+            if (null != rawCover) {
+                cover = BitmapFactory.decodeByteArray(rawCover, 0, rawCover.length, options);
+
+                return cover;
+            }
         }
 
-        // TODO: add default image:
         return null;
+    }
+
+    public boolean isPaused() {
+        return isPaused;
+    }
+
+    public boolean endPlaying() {
+        return endPlaying;
     }
 }
