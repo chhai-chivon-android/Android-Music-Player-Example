@@ -58,6 +58,8 @@ public class MusicPlayerActivity
 
     private Handler timeHandler = new Handler();
 
+    private boolean isTimeListenerSet;
+
     private void setCover(Bitmap trackCover) {
         if (trackCover != null) {
             ivTrackCover.setImageBitmap(trackCover);
@@ -110,6 +112,8 @@ public class MusicPlayerActivity
     }
 
     private void positionListener() {
+        isTimeListenerSet = true;
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -121,8 +125,8 @@ public class MusicPlayerActivity
 
                 sbTrackTimeline.setProgress(playerUtils.toSeconds(Player.getInstance().getTrackTimePosition()));
 
-                tvTrackStartTime.setText(String.valueOf(playerUtils.toMinutes(Player.getInstance()
-                        .getTrackTimePosition())));
+                tvTrackStartTime.setText(playerUtils.toMinutes(Player.getInstance()
+                        .getTrackTimePosition()));
 
                 if (Player.getInstance().endPlaying()) {
                     next();
@@ -170,8 +174,6 @@ public class MusicPlayerActivity
         } else {
             if (tracks.isEmpty()) {
                 tracks.addAll(Player.getInstance().checkDirectory());
-
-                positionListener();
             }
 
             if (Player.getInstance().isPaused()) {
@@ -181,6 +183,10 @@ public class MusicPlayerActivity
                 } else {
                     try {
                         Player.getInstance().play(tracks.get(position));
+
+                        if (!isTimeListenerSet) {
+                            positionListener();
+                        }
                     } catch (IOException playerException) {
                         playerException.printStackTrace();
                     }
