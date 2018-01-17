@@ -30,10 +30,9 @@ import java.util.List;
 
 public class MusicPlayerActivity
         extends AppCompatActivity
-            implements View.OnClickListener, View.OnLongClickListener {
+            implements View.OnClickListener {
 
     private static final int READ_EXTERNAL_STORAGE_REQUEST = 1;
-    private static final int SEEK_TO_ON_LONG_CLICK = 5000;
 
     private int SYSTEM_EXIT_CODE = 119;
 
@@ -268,11 +267,6 @@ public class MusicPlayerActivity
         }
     }
 
-    @Override
-    public boolean onLongClick(View view) {
-        return false;
-    }
-
     private void init() {
         Player.getInstance().init();
 
@@ -309,9 +303,6 @@ public class MusicPlayerActivity
         ibSkipPreviousTrack = findViewById(R.id.ib_skip_previous_track);
         ibPlayOrPauseTrack = findViewById(R.id.ib_play_or_pause_track);
         ibSkipNextTrack = findViewById(R.id.ib_skip_next_track);
-
-        ibSkipPreviousTrack.setOnLongClickListener(this);
-        ibSkipNextTrack.setOnLongClickListener(this);
 
         ibSkipPreviousTrack.setOnClickListener(this);
         ibPlayOrPauseTrack.setOnClickListener(this);
