@@ -18,6 +18,7 @@ import java.util.List;
 
 public class Player {
 
+    // Path to the music folder:
     private final String MUSIC_FOLDER_PATH = Environment
             .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
             .getPath() + "/";
@@ -33,18 +34,21 @@ public class Player {
     private boolean isPaused = true;
     private boolean endPlaying = false;
 
+    // Singleton holder:
     public static class PlayerHolder {
         static final Player PLAYER_INSTANCE = new Player();
+    }
+
+    // Singleton state:
+    public static Player getInstance() {
+        return PlayerHolder.PLAYER_INSTANCE;
     }
 
     private boolean getPlayerState() {
         return player == null;
     }
 
-    public static Player getInstance() {
-        return PlayerHolder.PLAYER_INSTANCE;
-    }
-
+    // Initialization player:
     public void init() {
         player = new MediaPlayer();
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -57,6 +61,7 @@ public class Player {
         playerUtils = new PlayerUtils();
     }
 
+    // Play:
     public void play(Track track)
             throws IOException {
         if (!getPlayerState() && !player.isPlaying()) {
@@ -73,6 +78,7 @@ public class Player {
         }
     }
 
+    // Resume:
     public void resume() {
         if (!getPlayerState() && !player.isPlaying() && isPaused) {
             player.seekTo(currentTime);
@@ -83,6 +89,7 @@ public class Player {
         }
     }
 
+    // Pause:
     public void pause() {
         if (!getPlayerState() && player.isPlaying() && !isPaused) {
             currentTime = player.getCurrentPosition();
@@ -93,18 +100,21 @@ public class Player {
         }
     }
 
+    // Stop:
     public void stop() {
         if (!getPlayerState() && player.isPlaying()) {
             player.stop();
         }
     }
 
+    // Seek:
     public void toTime(int time) {
         if (!getPlayerState()) {
             player.seekTo(time);
         }
     }
 
+    // Time position:
     public int getTrackTimePosition() {
         if (!getPlayerState()) {
             return player.getCurrentPosition();
@@ -113,6 +123,7 @@ public class Player {
         return DEFAULT_VALUE;
     }
 
+    // Duration:
     public int getTrackEndTime() {
         if (!getPlayerState()) {
             return player.getDuration();
@@ -121,6 +132,7 @@ public class Player {
         return DEFAULT_VALUE;
     }
 
+    // Add all supported music files:
     public List<Track> checkDirectory() {
         List<Track> tracks = new ArrayList<>();
 
@@ -135,6 +147,7 @@ public class Player {
         return tracks;
     }
 
+    // Get a cover:
     public Bitmap getCover(Track track, Context context) {
         Bitmap cover;
 
@@ -160,10 +173,12 @@ public class Player {
         return null;
     }
 
+    // Check pause:
     public boolean isPaused() {
         return isPaused;
     }
 
+    // Check end playing:
     public boolean endPlaying() {
         return endPlaying;
     }

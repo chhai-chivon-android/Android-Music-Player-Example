@@ -1,5 +1,6 @@
 package com.fomchenkovoutlook.artem.android_music_player_example.utils;
 
+// Supported music formats:
 interface ExtensionsInterface {
 
     String MUSIC_EXTENSION_3GP = ".3gp";

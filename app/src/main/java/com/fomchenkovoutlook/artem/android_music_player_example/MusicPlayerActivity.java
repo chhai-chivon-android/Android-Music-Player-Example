@@ -73,6 +73,7 @@ public class MusicPlayerActivity
                 .getDrawable(drawable));
     }
 
+    // Dialog to settings:
     private void toSettingsDialog(final Context context) {
         new AlertDialog.Builder(context)
                 .setTitle(R.string.permission_error_dialog_title)
@@ -100,6 +101,7 @@ public class MusicPlayerActivity
                 .show();
     }
 
+    // Check read permission:
     private void permissionCheck() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -111,6 +113,7 @@ public class MusicPlayerActivity
         }
     }
 
+    // Listen position:
     private void positionListener() {
         isTimeListenerSet = true;
 
@@ -128,19 +131,23 @@ public class MusicPlayerActivity
                 tvTrackStartTime.setText(playerUtils.toMinutes(Player.getInstance()
                         .getTrackTimePosition()));
 
+                // If a track was ended - play next:
                 if (Player.getInstance().endPlaying()) {
                     next();
                 }
 
+                // Delay for check a track position:
                 timeHandler.postDelayed(this, 1000);
             }
         });
     }
 
+    // Start playing a previous track:
     private void previous() {
         if (position > 0) {
             Player.getInstance().stop();
 
+            // Set a new position:w
             --position;
 
             ibSkipNextTrack.setImageDrawable(getResources()
@@ -166,7 +173,8 @@ public class MusicPlayerActivity
         }
     }
 
-    private void play() {
+    // Start playing a track:
+    private void playOrPause() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -176,6 +184,7 @@ public class MusicPlayerActivity
                 tracks.addAll(Player.getInstance().checkDirectory());
             }
 
+            // Play:
             if (Player.getInstance().isPaused()) {
                 if (trackTimePosition > 0) {
                     Player.getInstance().toTime(trackTimePosition);
@@ -209,7 +218,7 @@ public class MusicPlayerActivity
                 }
 
                 tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
-            } else {
+            } else { // Pause:
                 trackTimePosition = Player.getInstance().getTrackTimePosition();
 
                 Player.getInstance().pause();
@@ -219,10 +228,12 @@ public class MusicPlayerActivity
         }
     }
 
+    // Start playing a next track:
     private void next() {
         if (position < tracks.size()) {
             Player.getInstance().stop();
 
+            // Set a new position:
             ++position;
 
             ibSkipPreviousTrack.setImageDrawable(getResources()
@@ -257,7 +268,7 @@ public class MusicPlayerActivity
 
                 break;
             case R.id.ib_play_or_pause_track:
-                play();
+                playOrPause();
 
                 break;
             case R.id.ib_skip_next_track:
@@ -267,6 +278,7 @@ public class MusicPlayerActivity
         }
     }
 
+    // Initialization:
     private void init() {
         Player.getInstance().init();
 
@@ -279,17 +291,14 @@ public class MusicPlayerActivity
         sbTrackTimeline = findViewById(R.id.sb_track_timeline);
         sbTrackTimeline.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int length, boolean state) {
-
-            }
+            public void onProgressChanged(SeekBar seekBar, int length, boolean state) {}
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                // Seek:
                 Player.getInstance().toTime(playerUtils.toMilliseconds(seekBar.getProgress()));
             }
         });
@@ -298,6 +307,7 @@ public class MusicPlayerActivity
         tvTrackStartTime = findViewById(R.id.tv_track_start_time);
         tvTrackEndTime = findViewById(R.id.tv_track_end_time);
 
+        // Set the ticker:
         tvTrack.setSelected(true);
 
         ibSkipPreviousTrack = findViewById(R.id.ib_skip_previous_track);
@@ -313,7 +323,6 @@ public class MusicPlayerActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
-
         init();
     }
 }

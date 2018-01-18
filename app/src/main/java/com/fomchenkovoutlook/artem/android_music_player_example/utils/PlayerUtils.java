@@ -42,16 +42,19 @@ public class PlayerUtils {
         return false;
     }
 
+    // Convert to minutes:
     @SuppressLint("DefaultLocale")
     public String toMinutes(int trackTime) {
         return String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(trackTime),
                 TimeUnit.MILLISECONDS.toSeconds(trackTime) % TimeUnit.MINUTES.toSeconds(1));
     }
 
+    // Convert to seconds:
     public int toSeconds(int trackTime) {
         return (int) (TimeUnit.MILLISECONDS.toSeconds(trackTime));
     }
 
+    // Convert to milliseconds:
     public int toMilliseconds(int trackTime) {
         return (int) TimeUnit.SECONDS.toMillis(trackTime);
     }
