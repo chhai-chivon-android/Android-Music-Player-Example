@@ -34,7 +34,7 @@ public class MusicPlayerActivity
 
     private static final int READ_EXTERNAL_STORAGE_REQUEST = 1;
 
-    private int SYSTEM_EXIT_CODE = 119;
+    private int SYSTEM_EXIT_CODE = 5;
 
     private PlayerUtils playerUtils;
 
@@ -160,11 +160,9 @@ public class MusicPlayerActivity
             }
 
             setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
-
             setCover(Player.getInstance().getCover(tracks.get(position), this));
 
             tvTrack.setText(tracks.get(position).getName());
-
             tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
 
@@ -203,7 +201,6 @@ public class MusicPlayerActivity
                     setCover(Player.getInstance().getCover(tracks.get(position), this));
 
                     tvTrack.setText(tracks.get(position).getName());
-
                     sbTrackTimeline.setMax(playerUtils.toSeconds(Player.getInstance().getTrackEndTime()));
                 }
 
@@ -246,11 +243,9 @@ public class MusicPlayerActivity
             }
 
             setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
-
             setCover(Player.getInstance().getCover(tracks.get(position), this));
 
             tvTrack.setText(tracks.get(position).getName());
-
             tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
 
@@ -278,8 +273,11 @@ public class MusicPlayerActivity
         }
     }
 
-    // Initialization:
-    private void init() {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_music_player);
+
         Player.getInstance().init();
 
         playerUtils = new PlayerUtils();
@@ -317,12 +315,5 @@ public class MusicPlayerActivity
         ibSkipPreviousTrack.setOnClickListener(this);
         ibPlayOrPauseTrack.setOnClickListener(this);
         ibSkipNextTrack.setOnClickListener(this);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_music_player);
-        init();
     }
 }
