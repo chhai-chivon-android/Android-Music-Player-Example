@@ -1,5 +1,7 @@
 package com.fomchenkovoutlook.artem.android_music_player_example.player;
 
+import android.support.annotation.NonNull;
+
 // Track:
 public class Track {
 
@@ -9,7 +11,7 @@ public class Track {
         return name;
     }
 
-    public Track(String name) {
+    Track(@NonNull String name) {
         this.name = name;
     }
 }

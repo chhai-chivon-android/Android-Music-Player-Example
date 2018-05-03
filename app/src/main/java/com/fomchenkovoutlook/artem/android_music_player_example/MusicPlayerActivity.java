@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -19,6 +20,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.fomchenkovoutlook.artem.android_music_player_example.player.Player;
 import com.fomchenkovoutlook.artem.android_music_player_example.player.Track;
@@ -28,24 +30,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MusicPlayerActivity
-        extends AppCompatActivity
-            implements View.OnClickListener {
+public class MusicPlayerActivity extends AppCompatActivity {
 
     private static final int READ_EXTERNAL_STORAGE_REQUEST = 1;
-
-    private int SYSTEM_EXIT_CODE = 5;
+    private final int SYSTEM_EXIT_CODE = 5;
 
     private PlayerUtils playerUtils;
 
     private ImageView ivTrackCover;
-
     private TextView tvTrack;
     private TextView tvTrackStartTime;
     private TextView tvTrackEndTime;
-
     private SeekBar sbTrackTimeline;
-
     private ImageButton ibSkipPreviousTrack;
     private ImageButton ibPlayOrPauseTrack;
     private ImageButton ibSkipNextTrack;
@@ -55,10 +51,9 @@ public class MusicPlayerActivity
     private int position;
     private int oldPosition;
     private int trackTimePosition;
+    private boolean isTimeListenerSet;
 
     private Handler timeHandler = new Handler();
-
-    private boolean isTimeListenerSet;
 
     private void setCover(Bitmap trackCover) {
         if (trackCover != null) {
@@ -68,13 +63,12 @@ public class MusicPlayerActivity
         }
     }
 
-    private void setImageDrawable(ImageButton imageButton, int drawable) {
-        imageButton.setImageDrawable(getResources()
-                .getDrawable(drawable));
+    private void setImageDrawable(@NonNull ImageButton imageButton, int drawable) {
+        imageButton.setImageResource(drawable);
     }
 
     // Dialog to settings:
-    private void toSettingsDialog(final Context context) {
+    private void toSettingsDialog(@NonNull final Context context) {
         new AlertDialog.Builder(context)
                 .setTitle(R.string.permission_error_dialog_title)
                 .setMessage(R.string.permission_error_dialog_message)
@@ -102,7 +96,7 @@ public class MusicPlayerActivity
     }
 
     // Check read permission:
-    private void permissionCheck() {
+    private void checkReadStoragePermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)) {
             toSettingsDialog(this);
@@ -116,18 +110,15 @@ public class MusicPlayerActivity
     // Listen position:
     private void positionListener() {
         isTimeListenerSet = true;
-
         runOnUiThread(new Runnable() {
+
             @Override
             public void run() {
                 if (oldPosition != position) {
                     oldPosition = position;
-
                     sbTrackTimeline.setMax(playerUtils.toSeconds(Player.getInstance().getTrackEndTime()));
                 }
-
                 sbTrackTimeline.setProgress(playerUtils.toSeconds(Player.getInstance().getTrackTimePosition()));
-
                 tvTrackStartTime.setText(playerUtils.toMinutes(Player.getInstance()
                         .getTrackTimePosition()));
 
@@ -149,23 +140,18 @@ public class MusicPlayerActivity
 
             // Set a new position:w
             --position;
-
             ibSkipNextTrack.setImageDrawable(getResources()
                     .getDrawable(R.drawable.ic_skip_next_track_on));
-
             try {
                 Player.getInstance().play(tracks.get(position));
             } catch (IOException playerException) {
                 playerException.printStackTrace();
             }
-
             setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
             setCover(Player.getInstance().getCover(tracks.get(position), this));
-
             tvTrack.setText(tracks.get(position).getName());
             tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
-
         if (position == 0) {
             setImageDrawable(ibSkipPreviousTrack, R.drawable.ic_skip_previous_track_off);
         }
@@ -176,10 +162,16 @@ public class MusicPlayerActivity
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            permissionCheck();
+            checkReadStoragePermission();
         } else {
             if (tracks.isEmpty()) {
-                tracks.addAll(Player.getInstance().checkDirectory());
+                List<Track> trackList = Player.getInstance().checkDirectory();
+                if (!trackList.isEmpty()) {
+                    tracks.addAll(trackList);
+                } else {
+                    Toast.makeText(this, R.string.music_dorectory_error, Toast.LENGTH_LONG).show();
+                    return;
+                }
             }
 
             // Play:
@@ -190,22 +182,17 @@ public class MusicPlayerActivity
                 } else {
                     try {
                         Player.getInstance().play(tracks.get(position));
-
                         if (!isTimeListenerSet) {
                             positionListener();
                         }
                     } catch (IOException playerException) {
                         playerException.printStackTrace();
                     }
-
                     setCover(Player.getInstance().getCover(tracks.get(position), this));
-
                     tvTrack.setText(tracks.get(position).getName());
                     sbTrackTimeline.setMax(playerUtils.toSeconds(Player.getInstance().getTrackEndTime()));
                 }
-
                 setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
-
                 if (tracks.size() > 1) {
                     if (tvTrackStartTime.getVisibility() == View.INVISIBLE) {
                         tvTrackStartTime.setVisibility(View.VISIBLE);
@@ -213,13 +200,10 @@ public class MusicPlayerActivity
 
                     setImageDrawable(ibSkipNextTrack, R.drawable.ic_skip_next_track_on);
                 }
-
                 tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
             } else { // Pause:
                 trackTimePosition = Player.getInstance().getTrackTimePosition();
-
                 Player.getInstance().pause();
-
                 setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_play_track);
             }
         }
@@ -232,44 +216,20 @@ public class MusicPlayerActivity
 
             // Set a new position:
             ++position;
-
             ibSkipPreviousTrack.setImageDrawable(getResources()
                     .getDrawable(R.drawable.ic_skip_previous_track_on));
-
             try {
                 Player.getInstance().play(tracks.get(position));
             } catch (IOException playerException) {
                 playerException.printStackTrace();
             }
-
             setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
             setCover(Player.getInstance().getCover(tracks.get(position), this));
-
             tvTrack.setText(tracks.get(position).getName());
             tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
-
         if (position == tracks.size() - 1) {
-            ibSkipNextTrack.setImageDrawable(getResources()
-                    .getDrawable(R.drawable.ic_skip_next_track_off));
-        }
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.ib_skip_previous_track:
-                previous();
-
-                break;
-            case R.id.ib_play_or_pause_track:
-                playOrPause();
-
-                break;
-            case R.id.ib_skip_next_track:
-                next();
-
-                break;
+            ibSkipNextTrack.setImageDrawable(getResources().getDrawable(R.drawable.ic_skip_next_track_off));
         }
     }
 
@@ -277,13 +237,10 @@ public class MusicPlayerActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
-
         Player.getInstance().init();
 
         playerUtils = new PlayerUtils();
-
         tracks = new ArrayList<>();
-
         ivTrackCover = findViewById(R.id.iv_track_cover);
 
         sbTrackTimeline = findViewById(R.id.sb_track_timeline);
@@ -296,7 +253,6 @@ public class MusicPlayerActivity
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                // Seek:
                 Player.getInstance().toTime(playerUtils.toMilliseconds(seekBar.getProgress()));
             }
         });
@@ -312,8 +268,23 @@ public class MusicPlayerActivity
         ibPlayOrPauseTrack = findViewById(R.id.ib_play_or_pause_track);
         ibSkipNextTrack = findViewById(R.id.ib_skip_next_track);
 
-        ibSkipPreviousTrack.setOnClickListener(this);
-        ibPlayOrPauseTrack.setOnClickListener(this);
-        ibSkipNextTrack.setOnClickListener(this);
+        ibSkipPreviousTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                previous();
+            }
+        });
+        ibPlayOrPauseTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playOrPause();
+            }
+        });
+        ibSkipNextTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                next();
+            }
+        });
     }
 }

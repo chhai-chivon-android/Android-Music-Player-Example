@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 
 import com.fomchenkovoutlook.artem.android_music_player_example.utils.PlayerUtils;
 
@@ -26,11 +27,9 @@ public class Player {
     private final int DEFAULT_VALUE = 0;
 
     private MediaPlayer player;
-
     private PlayerUtils playerUtils;
 
     private int currentTime;
-
     private boolean isPaused = true;
     private boolean endPlaying = false;
 
@@ -44,8 +43,8 @@ public class Player {
         return PlayerHolder.PLAYER_INSTANCE;
     }
 
-    private boolean getPlayerState() {
-        return player == null;
+    private boolean isPlayerInitialize() {
+        return player != null;
     }
 
     // Initialization player:
@@ -57,14 +56,13 @@ public class Player {
                 endPlaying = true;
             }
         });
-
         playerUtils = new PlayerUtils();
     }
 
     // Play:
-    public void play(Track track)
+    public void play(@NonNull Track track)
             throws IOException {
-        if (!getPlayerState() && !player.isPlaying()) {
+        if (isPlayerInitialize() && !player.isPlaying()) {
             FileInputStream fileInputStream =
                     new FileInputStream(new File(MUSIC_FOLDER_PATH + track.getName()));
 
@@ -80,96 +78,82 @@ public class Player {
 
     // Resume:
     public void resume() {
-        if (!getPlayerState() && !player.isPlaying() && isPaused) {
+        if (isPlayerInitialize() && !player.isPlaying() && isPaused) {
             player.seekTo(currentTime);
-
             isPaused = false;
-
             player.start();
         }
     }
 
     // Pause:
     public void pause() {
-        if (!getPlayerState() && player.isPlaying() && !isPaused) {
+        if (isPlayerInitialize() && player.isPlaying() && !isPaused) {
             currentTime = player.getCurrentPosition();
-
             isPaused = true;
-
             player.pause();
         }
     }
 
     // Stop:
     public void stop() {
-        if (!getPlayerState() && player.isPlaying()) {
+        if (isPlayerInitialize() && player.isPlaying()) {
             player.stop();
         }
     }
 
     // Seek:
     public void toTime(int time) {
-        if (!getPlayerState()) {
+        if (isPlayerInitialize()) {
             player.seekTo(time);
         }
     }
 
     // Time position:
     public int getTrackTimePosition() {
-        if (!getPlayerState()) {
+        if (isPlayerInitialize()) {
             return player.getCurrentPosition();
         }
-
         return DEFAULT_VALUE;
     }
 
     // Duration:
     public int getTrackEndTime() {
-        if (!getPlayerState()) {
+        if (isPlayerInitialize()) {
             return player.getDuration();
         }
-
         return DEFAULT_VALUE;
     }
 
     // Add all supported music files:
     public List<Track> checkDirectory() {
         List<Track> tracks = new ArrayList<>();
-
-        if (!getPlayerState()) {
+        if (isPlayerInitialize()) {
             for (File track: new File(MUSIC_FOLDER_PATH).listFiles()) {
                 if (playerUtils.isMusicFile(track)) {
                     tracks.add(new Track(track.getName()));
                 }
             }
         }
-
         return tracks;
     }
 
     // Get a cover:
-    public Bitmap getCover(Track track, Context context) {
+    public Bitmap getCover(@NonNull Track track, @NonNull Context context) {
         Bitmap cover;
-
-        if (!getPlayerState()) {
+        if (isPlayerInitialize()) {
             MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-
             byte[] rawCover;
-
             BitmapFactory.Options options = new BitmapFactory.Options();
-
             mediaMetadataRetriever.setDataSource(context,
                     Uri.fromFile(new File(MUSIC_FOLDER_PATH + track.getName())));
 
             rawCover = mediaMetadataRetriever.getEmbeddedPicture();
-
             if (null != rawCover) {
                 cover = BitmapFactory.decodeByteArray(rawCover, 0, rawCover.length, options);
 
                 return cover;
             }
         }
-
         return null;
     }
 

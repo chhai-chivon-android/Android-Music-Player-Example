@@ -1,13 +1,14 @@
 package com.fomchenkovoutlook.artem.android_music_player_example.utils;
 
 import android.annotation.SuppressLint;
+import android.support.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.fomchenkovoutlook.artem.android_music_player_example.utils.ExtensionsInterface.*;
+import static com.fomchenkovoutlook.artem.android_music_player_example.utils.Extensions.*;
 
 public class PlayerUtils {
 
@@ -32,13 +33,12 @@ public class PlayerUtils {
         musicExtensions.add(MUSIC_EXTENSION_OGG);
     }
 
-    public boolean isMusicFile(File file) {
+    public boolean isMusicFile(@NonNull File file) {
         for (String extension: musicExtensions) {
             if (file.getAbsolutePath().endsWith(extension)) {
                 return true;
             }
         }
-
         return false;
     }
 

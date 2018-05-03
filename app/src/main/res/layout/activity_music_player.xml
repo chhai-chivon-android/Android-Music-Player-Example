@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,20 +9,20 @@
 
     <ImageView
         android:id="@+id/iv_track_cover"
-        android:layout_width="192dp"
-        android:layout_height="192dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:background="@null"
+        android:contentDescription="@string/cover_description"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.3"
-        app:srcCompat="@drawable/ic_music_note_track"
-        android:contentDescription="@string/cover_description" />
+        app:srcCompat="@drawable/ic_music_note_track" />
 
     <TextView
         android:id="@+id/tv_track"
@@ -53,7 +54,6 @@
         android:text="@string/start_time"
         android:textAlignment="gravity"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/sb_track_timeline" />
 
@@ -77,15 +77,17 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/sb_track_timeline" />
 
-    <android.support.constraint.ConstraintLayout
-        android:id="@+id/constraintLayout"
+    <LinearLayout
+        android:id="@+id/ll_action_items"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:padding="8dp"
         app:layout_constraintEnd_toEndOf="@+id/sb_track_timeline"
         app:layout_constraintStart_toStartOf="@+id/sb_track_timeline"
         app:layout_constraintTop_toBottomOf="@+id/sb_track_timeline">
@@ -94,49 +96,28 @@
             android:id="@+id/ib_skip_previous_track"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
             android:background="@null"
             android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="@+id/ib_play_or_pause_track"
-            app:layout_constraintEnd_toStartOf="@+id/ib_play_or_pause_track"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/ib_play_or_pause_track"
             app:srcCompat="@drawable/ic_skip_previous_track_off"
-            android:contentDescription="@string/to_previous_track_description" />
+            android:contentDescription="@string/skip_previous_track" />
 
         <ImageButton
             android:id="@+id/ib_play_or_pause_track"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:background="@null"
             android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_play_track"
-            android:contentDescription="@string/play_or_pause_description" />
+            android:contentDescription="@string/play_or_pause_track" />
 
         <ImageButton
             android:id="@+id/ib_skip_next_track"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
             android:background="@null"
             android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="@+id/ib_play_or_pause_track"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/ib_play_or_pause_track"
-            app:layout_constraintTop_toTopOf="@+id/ib_play_or_pause_track"
             app:srcCompat="@drawable/ic_skip_next_track_off"
-            android:contentDescription="@string/to_next_track_description" />
+            android:contentDescription="@string/skip_next_track" />
 
-    </android.support.constraint.ConstraintLayout>
-
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
