@@ -43,28 +43,31 @@ public class Player {
         return PlayerHolder.PLAYER_INSTANCE;
     }
 
+    /**
+     * Check player state
+     * @return is player initialize value
+     */
     private boolean isPlayerInitialize() {
         return player != null;
     }
 
-    // Initialization player:
-    public void init() {
+    /**
+     * Initialize player
+     */
+    public void initialize() {
         player = new MediaPlayer();
-        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                endPlaying = true;
-            }
-        });
+        player.setOnCompletionListener(mediaPlayer -> endPlaying = true);
         playerUtils = new PlayerUtils();
     }
 
-    // Play:
+    /**
+     * Play track
+     * @param track selected track
+     */
     public void play(@NonNull Track track)
             throws IOException {
         if (isPlayerInitialize() && !player.isPlaying()) {
-            FileInputStream fileInputStream =
-                    new FileInputStream(new File(MUSIC_FOLDER_PATH + track.getName()));
+            FileInputStream fileInputStream = new FileInputStream(new File(MUSIC_FOLDER_PATH + track.getName()));
 
             player.reset();
             player.setDataSource(fileInputStream.getFD());
@@ -76,7 +79,9 @@ public class Player {
         }
     }
 
-    // Resume:
+    /**
+     * Resume
+     */
     public void resume() {
         if (isPlayerInitialize() && !player.isPlaying() && isPaused) {
             player.seekTo(currentTime);
@@ -85,7 +90,9 @@ public class Player {
         }
     }
 
-    // Pause:
+    /**
+     * Pause
+     */
     public void pause() {
         if (isPlayerInitialize() && player.isPlaying() && !isPaused) {
             currentTime = player.getCurrentPosition();
@@ -94,21 +101,29 @@ public class Player {
         }
     }
 
-    // Stop:
+    /**
+     * Stop
+     */
     public void stop() {
         if (isPlayerInitialize() && player.isPlaying()) {
             player.stop();
         }
     }
 
-    // Seek:
+    /**
+     * Seek to needed time
+     * @param time needed time
+     */
     public void toTime(int time) {
         if (isPlayerInitialize()) {
             player.seekTo(time);
         }
     }
 
-    // Time position:
+    /**
+     * Get track's positions
+     * @return time position
+     */
     public int getTrackTimePosition() {
         if (isPlayerInitialize()) {
             return player.getCurrentPosition();
@@ -116,7 +131,10 @@ public class Player {
         return DEFAULT_VALUE;
     }
 
-    // Duration:
+    /**
+     * Track length
+     * @return length
+     */
     public int getTrackEndTime() {
         if (isPlayerInitialize()) {
             return player.getDuration();
@@ -124,20 +142,31 @@ public class Player {
         return DEFAULT_VALUE;
     }
 
-    // Add all supported music files:
+    /**
+     * Check default Music directory on device
+     * @return tracks
+     */
     public List<Track> checkDirectory() {
         List<Track> tracks = new ArrayList<>();
         if (isPlayerInitialize()) {
-            for (File track: new File(MUSIC_FOLDER_PATH).listFiles()) {
-                if (playerUtils.isMusicFile(track)) {
-                    tracks.add(new Track(track.getName()));
+            File[] musicDirectoryList = new File(MUSIC_FOLDER_PATH).listFiles();
+            if (musicDirectoryList != null) {
+                for (File track : musicDirectoryList) {
+                    if (playerUtils.isMusicFile(track)) {
+                        tracks.add(new Track(track.getName()));
+                    }
                 }
             }
         }
         return tracks;
     }
 
-    // Get a cover:
+    /**
+     * Get cover from track
+     * @param track current track
+     * @param context context
+     * @return cover
+     */
     public Bitmap getCover(@NonNull Track track, @NonNull Context context) {
         Bitmap cover;
         if (isPlayerInitialize()) {
@@ -157,12 +186,18 @@ public class Player {
         return null;
     }
 
-    // Check pause:
+    /**
+     * Check player pause state
+     * @return player state value
+     */
     public boolean isPaused() {
         return isPaused;
     }
 
-    // Check end playing:
+    /**
+     * Check track playing is done
+     * @return track state
+     */
     public boolean endPlaying() {
         return endPlaying;
     }

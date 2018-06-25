@@ -1,20 +1,19 @@
 package com.fomchenkovoutlook.artem.android_music_player_example;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -33,7 +32,8 @@ import java.util.List;
 public class MusicPlayerActivity extends AppCompatActivity {
 
     private static final int READ_EXTERNAL_STORAGE_REQUEST = 1;
-    private final int SYSTEM_EXIT_CODE = 5;
+    private static final int DELAY_IN_MILLIS = 1000;
+    private static final int SYSTEM_EXIT_CODE = 5;
 
     private PlayerUtils playerUtils;
 
@@ -55,7 +55,11 @@ public class MusicPlayerActivity extends AppCompatActivity {
 
     private Handler timeHandler = new Handler();
 
-    private void setCover(Bitmap trackCover) {
+    /**
+     * Set track's cover to ImageView
+     * @param trackCover cover
+     */
+    private void setCover(@Nullable Bitmap trackCover) {
         if (trackCover != null) {
             ivTrackCover.setImageBitmap(trackCover);
         } else {
@@ -63,43 +67,52 @@ public class MusicPlayerActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Set icon to ImageButton
+     * @param imageButton needed button
+     * @param drawable resource
+     */
     private void setImageDrawable(@NonNull ImageButton imageButton, int drawable) {
         imageButton.setImageResource(drawable);
     }
 
-    // Dialog to settings:
-    private void toSettingsDialog(@NonNull final Context context) {
-        new AlertDialog.Builder(context)
+    private void colorizeImage(@NonNull ImageButton imageButton, boolean toBlack) {
+        if (toBlack) {
+            imageButton.setColorFilter(ContextCompat.getColor(this, R.color.black));
+        } else {
+            imageButton.setColorFilter(ContextCompat.getColor(this, R.color.gray));
+        }
+    }
+
+    /**
+     * Open settings
+     */
+    private void openSettingsDialog() {
+        new AlertDialog.Builder(this)
                 .setTitle(R.string.permission_error_dialog_title)
                 .setMessage(R.string.permission_error_dialog_message)
                 .setNegativeButton(R.string.permission_error_dialog_negative_button_text,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                System.exit(SYSTEM_EXIT_CODE);
-                            }
-                        })
+                        (dialogInterface, i) -> System.exit(SYSTEM_EXIT_CODE))
                 .setPositiveButton(R.string.permission_error_dialog_positive_button_text,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                Intent intent = new Intent();
-                                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                Uri uri = Uri.fromParts("package", context.getPackageName(), null);
-                                intent.setData(uri);
-                                context.startActivity(intent);
-                            }
+                        (dialogInterface, i) -> {
+                            Intent intent = new Intent();
+                            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            Uri uri = Uri.fromParts("package", getPackageName(), null);
+                            intent.setData(uri);
+                            startActivity(intent);
                         })
                 .setCancelable(false)
                 .create()
                 .show();
     }
 
-    // Check read permission:
+    /**
+     * Check storage permission
+     */
     private void checkReadStoragePermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            toSettingsDialog(this);
+            openSettingsDialog();
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
@@ -107,7 +120,9 @@ public class MusicPlayerActivity extends AppCompatActivity {
         }
     }
 
-    // Listen position:
+    /**
+     * Listen track's position
+     */
     private void positionListener() {
         isTimeListenerSet = true;
         runOnUiThread(new Runnable() {
@@ -128,20 +143,21 @@ public class MusicPlayerActivity extends AppCompatActivity {
                 }
 
                 // Delay for check a track position:
-                timeHandler.postDelayed(this, 1000);
+                timeHandler.postDelayed(this, DELAY_IN_MILLIS);
             }
         });
     }
 
-    // Start playing a previous track:
+    /**
+     * Skip to previous track
+     */
     private void previous() {
         if (position > 0) {
             Player.getInstance().stop();
 
-            // Set a new position:w
+            // Set a new position:
             --position;
-            ibSkipNextTrack.setImageDrawable(getResources()
-                    .getDrawable(R.drawable.ic_skip_next_track_on));
+            colorizeImage(ibSkipNextTrack, true);
             try {
                 Player.getInstance().play(tracks.get(position));
             } catch (IOException playerException) {
@@ -153,14 +169,15 @@ public class MusicPlayerActivity extends AppCompatActivity {
             tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
         if (position == 0) {
-            setImageDrawable(ibSkipPreviousTrack, R.drawable.ic_skip_previous_track_off);
+            colorizeImage(ibSkipPreviousTrack, false);
         }
     }
 
-    // Start playing a track:
+    /**
+     * Play or pause current track
+     */
     private void playOrPause() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             checkReadStoragePermission();
         } else {
@@ -196,9 +213,8 @@ public class MusicPlayerActivity extends AppCompatActivity {
                 if (tracks.size() > 1) {
                     if (tvTrackStartTime.getVisibility() == View.INVISIBLE) {
                         tvTrackStartTime.setVisibility(View.VISIBLE);
+                        colorizeImage(ibSkipNextTrack, true);
                     }
-
-                    setImageDrawable(ibSkipNextTrack, R.drawable.ic_skip_next_track_on);
                 }
                 tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
             } else { // Pause:
@@ -209,15 +225,16 @@ public class MusicPlayerActivity extends AppCompatActivity {
         }
     }
 
-    // Start playing a next track:
+    /**
+     * Skip to next track
+     */
     private void next() {
-        if (position < tracks.size()) {
+        if (position < tracks.size() - 1) {
             Player.getInstance().stop();
 
             // Set a new position:
             ++position;
-            ibSkipPreviousTrack.setImageDrawable(getResources()
-                    .getDrawable(R.drawable.ic_skip_previous_track_on));
+            colorizeImage(ibSkipPreviousTrack, true);
             try {
                 Player.getInstance().play(tracks.get(position));
             } catch (IOException playerException) {
@@ -229,7 +246,7 @@ public class MusicPlayerActivity extends AppCompatActivity {
             tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
         if (position == tracks.size() - 1) {
-            ibSkipNextTrack.setImageDrawable(getResources().getDrawable(R.drawable.ic_skip_next_track_off));
+            colorizeImage(ibSkipNextTrack, false);
         }
     }
 
@@ -237,7 +254,7 @@ public class MusicPlayerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
-        Player.getInstance().init();
+        Player.getInstance().initialize();
 
         playerUtils = new PlayerUtils();
         tracks = new ArrayList<>();
@@ -261,30 +278,19 @@ public class MusicPlayerActivity extends AppCompatActivity {
         tvTrackStartTime = findViewById(R.id.tv_track_start_time);
         tvTrackEndTime = findViewById(R.id.tv_track_end_time);
 
-        // Set the ticker:
+        // Set the track ticker:
         tvTrack.setSelected(true);
 
         ibSkipPreviousTrack = findViewById(R.id.ib_skip_previous_track);
         ibPlayOrPauseTrack = findViewById(R.id.ib_play_or_pause_track);
         ibSkipNextTrack = findViewById(R.id.ib_skip_next_track);
 
-        ibSkipPreviousTrack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                previous();
-            }
-        });
-        ibPlayOrPauseTrack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playOrPause();
-            }
-        });
-        ibSkipNextTrack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                next();
-            }
-        });
+        colorizeImage(ibSkipPreviousTrack, false);
+        colorizeImage(ibSkipNextTrack, false);
+
+        ibSkipPreviousTrack.setOnClickListener(v -> previous());
+        ibPlayOrPauseTrack.setOnClickListener(v -> playOrPause());
+        ibSkipNextTrack.setOnClickListener(v -> next());
     }
+
 }

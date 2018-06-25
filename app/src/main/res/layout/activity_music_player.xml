@@ -98,7 +98,7 @@
             android:layout_height="wrap_content"
             android:background="@null"
             android:padding="8dp"
-            app:srcCompat="@drawable/ic_skip_previous_track_off"
+            app:srcCompat="@drawable/ic_skip_previous_track"
             android:contentDescription="@string/skip_previous_track" />
 
         <ImageButton
@@ -116,7 +116,7 @@
             android:layout_height="wrap_content"
             android:background="@null"
             android:padding="8dp"
-            app:srcCompat="@drawable/ic_skip_next_track_off"
+            app:srcCompat="@drawable/ic_skip_next_track"
             android:contentDescription="@string/skip_next_track" />
 
     </LinearLayout>
