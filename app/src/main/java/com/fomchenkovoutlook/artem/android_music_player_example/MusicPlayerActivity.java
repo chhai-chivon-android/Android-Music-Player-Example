@@ -1,21 +1,12 @@
 package com.fomchenkovoutlook.artem.android_music_player_example;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -23,28 +14,31 @@ import android.widget.Toast;
 
 import com.fomchenkovoutlook.artem.android_music_player_example.player.Player;
 import com.fomchenkovoutlook.artem.android_music_player_example.player.Track;
-import com.fomchenkovoutlook.artem.android_music_player_example.utils.PlayerUtils;
+import com.fomchenkovoutlook.artem.android_music_player_example.support.Constants;
+import com.fomchenkovoutlook.artem.android_music_player_example.support.utils.AppUtils;
+import com.fomchenkovoutlook.artem.android_music_player_example.support.utils.PlayerUtils;
+import com.fomchenkovoutlook.artem.android_music_player_example.support.utils.UIUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 public class MusicPlayerActivity extends AppCompatActivity {
 
-    private static final int READ_EXTERNAL_STORAGE_REQUEST = 1;
-    private static final int DELAY_IN_MILLIS = 1000;
-    private static final int SYSTEM_EXIT_CODE = 5;
+    @BindView(R.id.track_cover) protected ImageView trackCover;
+    @BindView(R.id.previous_track) protected ImageView previousTrack;
+    @BindView(R.id.play_or_pause) protected ImageView playOrPause;
+    @BindView(R.id.next_track) protected ImageView nextTrack;
 
-    private PlayerUtils playerUtils;
 
-    private ImageView ivTrackCover;
-    private TextView tvTrack;
-    private TextView tvTrackStartTime;
-    private TextView tvTrackEndTime;
-    private SeekBar sbTrackTimeline;
-    private ImageButton ibSkipPreviousTrack;
-    private ImageButton ibPlayOrPauseTrack;
-    private ImageButton ibSkipNextTrack;
+    @BindView(R.id.track_title) protected TextView trackTitle;
+    @BindView(R.id.track_progress) protected TextView trackProgress;
+    @BindView(R.id.track_duration) protected TextView trackDuration;
+
+    @BindView(R.id.track_timeline) protected SeekBar trackTimeline;
 
     private List<Track> tracks;
 
@@ -55,131 +49,46 @@ public class MusicPlayerActivity extends AppCompatActivity {
 
     private Handler timeHandler = new Handler();
 
-    /**
-     * Set track's cover to ImageView
-     * @param trackCover cover
-     */
-    private void setCover(@Nullable Bitmap trackCover) {
-        if (trackCover != null) {
-            ivTrackCover.setImageBitmap(trackCover);
-        } else {
-            ivTrackCover.setImageDrawable(getResources().getDrawable(R.drawable.ic_music_note_track));
-        }
-    }
-
-    /**
-     * Set icon to ImageButton
-     * @param imageButton needed button
-     * @param drawable resource
-     */
-    private void setImageDrawable(@NonNull ImageButton imageButton, int drawable) {
-        imageButton.setImageResource(drawable);
-    }
-
-    private void colorizeImage(@NonNull ImageButton imageButton, boolean toBlack) {
-        if (toBlack) {
-            imageButton.setColorFilter(ContextCompat.getColor(this, R.color.black));
-        } else {
-            imageButton.setColorFilter(ContextCompat.getColor(this, R.color.gray));
-        }
-    }
-
-    /**
-     * Open settings
-     */
-    private void openSettingsDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.permission_error_dialog_title)
-                .setMessage(R.string.permission_error_dialog_message)
-                .setNegativeButton(R.string.permission_error_dialog_negative_button_text,
-                        (dialogInterface, i) -> System.exit(SYSTEM_EXIT_CODE))
-                .setPositiveButton(R.string.permission_error_dialog_positive_button_text,
-                        (dialogInterface, i) -> {
-                            Intent intent = new Intent();
-                            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                            Uri uri = Uri.fromParts("package", getPackageName(), null);
-                            intent.setData(uri);
-                            startActivity(intent);
-                        })
-                .setCancelable(false)
-                .create()
-                .show();
-    }
-
-    /**
-     * Check storage permission
-     */
-    private void checkReadStoragePermission() {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            openSettingsDialog();
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    READ_EXTERNAL_STORAGE_REQUEST);
-        }
-    }
-
-    /**
-     * Listen track's position
-     */
-    private void positionListener() {
+    private void setPositionListener() {
         isTimeListenerSet = true;
-        runOnUiThread(new Runnable() {
-
-            @Override
-            public void run() {
-                if (oldPosition != position) {
-                    oldPosition = position;
-                    sbTrackTimeline.setMax(playerUtils.toSeconds(Player.getInstance().getTrackEndTime()));
-                }
-                sbTrackTimeline.setProgress(playerUtils.toSeconds(Player.getInstance().getTrackTimePosition()));
-                tvTrackStartTime.setText(playerUtils.toMinutes(Player.getInstance()
-                        .getTrackTimePosition()));
-
-                // If a track was ended - play next:
-                if (Player.getInstance().endPlaying()) {
-                    next();
-                }
-
-                // Delay for check a track position:
-                timeHandler.postDelayed(this, DELAY_IN_MILLIS);
+        runOnUiThread(() -> {
+            if (oldPosition != position) {
+                oldPosition = position;
+                trackTimeline.setMax(PlayerUtils.toSeconds(Player.getInstance().getTrackEndTime()));
             }
+
+            trackTimeline.setProgress(PlayerUtils.toSeconds(Player.getInstance().getTrackTimePosition()));
+            trackProgress.setText(PlayerUtils.toMinutes(Player.getInstance()
+                    .getTrackTimePosition()));
+
+            if (Player.getInstance().endPlaying()) {
+                next();
+            }
+
+            timeHandler.postDelayed(this::setPositionListener, Constants.TIME.TRACK_PROGRESS_DELAY_IN_MILLIS);
         });
     }
 
-    /**
-     * Skip to previous track
-     */
     private void previous() {
         if (position > 0) {
             Player.getInstance().stop();
-
-            // Set a new position:
             --position;
-            colorizeImage(ibSkipNextTrack, true);
-            try {
-                Player.getInstance().play(tracks.get(position));
-            } catch (IOException playerException) {
-                playerException.printStackTrace();
-            }
-            setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
-            setCover(Player.getInstance().getCover(tracks.get(position), this));
-            tvTrack.setText(tracks.get(position).getName());
-            tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
+            UIUtils.colorizeImage(nextTrack, true);
+            Player.getInstance().play(tracks.get(position));
+            UIUtils.setImageDrawable(playOrPause, R.drawable.ic_pause);
+            UIUtils.setBitmapCover(trackCover, Player.getInstance().getCover(tracks.get(position), this));
+            trackTitle.setText(tracks.get(position).getTitle());
+            trackDuration.setText(PlayerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
         if (position == 0) {
-            colorizeImage(ibSkipPreviousTrack, false);
+            UIUtils.colorizeImage(previousTrack, false);
         }
     }
 
-    /**
-     * Play or pause current track
-     */
     private void playOrPause() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            checkReadStoragePermission();
+            AppUtils.checkReadStoragePermission(this);
         } else {
             if (tracks.isEmpty()) {
                 List<Track> trackList = Player.getInstance().checkDirectory();
@@ -190,107 +99,88 @@ public class MusicPlayerActivity extends AppCompatActivity {
                     return;
                 }
             }
-
-            // Play:
-            if (Player.getInstance().isPaused()) {
+            if (Player.getInstance().isPausing()) {
                 if (trackTimePosition > 0) {
-                    Player.getInstance().toTime(trackTimePosition);
                     Player.getInstance().resume();
                 } else {
-                    try {
-                        Player.getInstance().play(tracks.get(position));
-                        if (!isTimeListenerSet) {
-                            positionListener();
-                        }
-                    } catch (IOException playerException) {
-                        playerException.printStackTrace();
-                    }
-                    setCover(Player.getInstance().getCover(tracks.get(position), this));
-                    tvTrack.setText(tracks.get(position).getName());
-                    sbTrackTimeline.setMax(playerUtils.toSeconds(Player.getInstance().getTrackEndTime()));
+                    Player.getInstance().play(tracks.get(position));
                 }
-                setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
+                if (!isTimeListenerSet) {
+                    setPositionListener();
+                    UIUtils.setBitmapCover(trackCover, Player.getInstance().getCover(tracks.get(position), this));
+                    trackTitle.setText(tracks.get(position).getTitle());
+                    trackTimeline.setMax(PlayerUtils.toSeconds(Player.getInstance().getTrackEndTime()));
+                }
+                UIUtils.setImageDrawable(playOrPause, R.drawable.ic_pause);
                 if (tracks.size() > 1) {
-                    if (tvTrackStartTime.getVisibility() == View.INVISIBLE) {
-                        tvTrackStartTime.setVisibility(View.VISIBLE);
-                        colorizeImage(ibSkipNextTrack, true);
+                    if (trackProgress.getVisibility() == View.INVISIBLE) {
+                        trackProgress.setVisibility(View.VISIBLE);
+                        UIUtils.colorizeImage(nextTrack, true);
                     }
                 }
-                tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
-            } else { // Pause:
+                trackDuration.setText(PlayerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
+            } else {
                 trackTimePosition = Player.getInstance().getTrackTimePosition();
                 Player.getInstance().pause();
-                setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_play_track);
+                UIUtils.setImageDrawable(playOrPause, R.drawable.ic_play);
             }
         }
     }
 
-    /**
-     * Skip to next track
-     */
     private void next() {
         if (position < tracks.size() - 1) {
             Player.getInstance().stop();
-
-            // Set a new position:
             ++position;
-            colorizeImage(ibSkipPreviousTrack, true);
-            try {
-                Player.getInstance().play(tracks.get(position));
-            } catch (IOException playerException) {
-                playerException.printStackTrace();
-            }
-            setImageDrawable(ibPlayOrPauseTrack, R.drawable.ic_pause_track);
-            setCover(Player.getInstance().getCover(tracks.get(position), this));
-            tvTrack.setText(tracks.get(position).getName());
-            tvTrackEndTime.setText(playerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
+            UIUtils.colorizeImage(previousTrack, true);
+            Player.getInstance().play(tracks.get(position));
+            UIUtils.setImageDrawable(playOrPause, R.drawable.ic_pause);
+            UIUtils.setBitmapCover(trackCover, Player.getInstance().getCover(tracks.get(position), this));
+            trackTitle.setText(tracks.get(position).getTitle());
+            trackDuration.setText(PlayerUtils.toMinutes(Player.getInstance().getTrackEndTime()));
         }
         if (position == tracks.size() - 1) {
-            colorizeImage(ibSkipNextTrack, false);
+            UIUtils.colorizeImage(nextTrack, false);
         }
+    }
+
+    @OnClick(R.id.previous_track)
+    public void onPreviousTrackClick() {
+        previous();
+    }
+
+    @OnClick(R.id.play_or_pause)
+    public void onPlayPauseClick() {
+        playOrPause();
+    }
+
+    @OnClick(R.id.next_track)
+    public void onNextTrackClick() {
+        next();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
-        Player.getInstance().initialize();
+        ButterKnife.bind(this);
 
-        playerUtils = new PlayerUtils();
         tracks = new ArrayList<>();
-        ivTrackCover = findViewById(R.id.iv_track_cover);
 
-        sbTrackTimeline = findViewById(R.id.sb_track_timeline);
-        sbTrackTimeline.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int length, boolean state) {}
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+        trackTimeline.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar seekBar, int length, boolean state) {}
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Player.getInstance().toTime(playerUtils.toMilliseconds(seekBar.getProgress()));
+                Player.getInstance().toTime(PlayerUtils.toMilliseconds(seekBar.getProgress()));
             }
         });
 
-        tvTrack = findViewById(R.id.tv_track);
-        tvTrackStartTime = findViewById(R.id.tv_track_start_time);
-        tvTrackEndTime = findViewById(R.id.tv_track_end_time);
+        // If the track title is long - start the running line:
+        trackTitle.setSelected(true);
 
-        // Set the track ticker:
-        tvTrack.setSelected(true);
-
-        ibSkipPreviousTrack = findViewById(R.id.ib_skip_previous_track);
-        ibPlayOrPauseTrack = findViewById(R.id.ib_play_or_pause_track);
-        ibSkipNextTrack = findViewById(R.id.ib_skip_next_track);
-
-        colorizeImage(ibSkipPreviousTrack, false);
-        colorizeImage(ibSkipNextTrack, false);
-
-        ibSkipPreviousTrack.setOnClickListener(v -> previous());
-        ibPlayOrPauseTrack.setOnClickListener(v -> playOrPause());
-        ibSkipNextTrack.setOnClickListener(v -> next());
+        UIUtils.colorizeImage(previousTrack, false);
+        UIUtils.colorizeImage(nextTrack, false);
     }
 
 }

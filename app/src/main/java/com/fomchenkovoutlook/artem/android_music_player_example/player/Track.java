@@ -4,14 +4,14 @@ import android.support.annotation.NonNull;
 
 public class Track {
 
-    private String name;
+    private String title;
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    Track(@NonNull String name) {
-        this.name = name;
+    Track(@NonNull String title) {
+        this.title = title;
     }
 
 }
