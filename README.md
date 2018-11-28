@@ -1,5 +1,7 @@
 # Android-Music-Player-Example
 
+App using [ButterKnife](https://github.com/JakeWharton/butterknife) for UI binding
+
 Application features:
 - playing and control music from the device's music folder.
 
